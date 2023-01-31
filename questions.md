@@ -18,6 +18,7 @@
 
 ## What would you add if you had more time and how?
 - Instead of using hardcoded values for the chunk that is safe to assume that it will be downloaded per second. I could have checked the current internet speed of the client and adjusted the offset size based on this. However, I don't know exactly how to do this, I would have needed to search online to find.
+- Use multithreading with buckets to download the content instead of one single thread.
 - A UI so I can test the interrupt feature. 
 - The skeleton code is using old style Java. I could update this to use Java 17 and Lombok. However, I was worried that you wouldn't have these downloaded.
 - More Unite Tests.
