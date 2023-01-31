@@ -22,4 +22,10 @@ public interface FileDownloader {
      * Cancels any in progress downloads
      */
     void CancelDownloads();
+
+
+    /**
+     * Resumes the current download (given that the file started downloading and the process was cached)
+     */
+    void AllowResumeDownloads();
 }

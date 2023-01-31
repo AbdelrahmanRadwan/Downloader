@@ -10,47 +10,49 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
+import static com.accurx.reliabledownloader.DownloadUtils.*;
+
 public class MyFileDownloader implements FileDownloader {
+    // TODO: Use the download speed of the current client instead fo the minimum download speed by a 3G.
     private static final int DOWNLOAD_CHUNK_SIZE_PER_SECOND = 12500; // Typical 3G (Basic) Download Speed 0.1Mbit/s
     private boolean isDownloadActive = true;
-    DefaultWebSystemCall defaultWebSystemCall = new DefaultWebSystemCall();
 
     public CompletableFuture<Boolean> DownloadFile(final String contentFileUrl,
                                                    final String localFilePath,
                                                    final Consumer<FileProgress> onProgressChanged) throws ExecutionException, InterruptedException, IOException {
+        this.isDownloadActive = true; // Allow the download to start if it was previously stopped.
         final Path outputFilePath = Paths.get(localFilePath);
 
-        final long totalContentLengthToDownload = Long.parseLong(defaultWebSystemCall.GetHeaders(contentFileUrl).get().headers().firstValue("Content-Length").orElse("0"));
-        long totalDownloadedBytes = 0;
-        if (Files.exists(outputFilePath)) {
-            totalDownloadedBytes = Files.readAllBytes(outputFilePath).length;
+        final long totalContentLengthToDownload = getTotalContentLengthToDownload(contentFileUrl);
+        long totalWrittenBytes = getTotalWrittenBytes(outputFilePath);
+
+        while (totalWrittenBytes < totalContentLengthToDownload && this.isDownloadActive) {
+            onProgressChanged.accept(getDownloadProgress(totalContentLengthToDownload, totalWrittenBytes));
+            final long startDownloadingBytes = totalWrittenBytes;
+            final long bytesToDownload = Math.min(DOWNLOAD_CHUNK_SIZE_PER_SECOND, totalContentLengthToDownload - totalWrittenBytes);
+            final long endDownloadingBytes = startDownloadingBytes + bytesToDownload;
+            final byte[] downloadedContent = getPartiallyDownloadedContent(contentFileUrl, startDownloadingBytes, endDownloadingBytes);
+            Files.write(outputFilePath, downloadedContent, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            totalWrittenBytes += downloadedContent.length;
         }
 
-        while (totalDownloadedBytes < totalContentLengthToDownload) {
-            if(!this.isDownloadActive) {
-                break;
-            }
-            showDownloadProgress(onProgressChanged, totalContentLengthToDownload, totalDownloadedBytes);
-            long startDownloadingBytes = totalDownloadedBytes;
-            long endDownloadingBytes = Math.min(startDownloadingBytes + DOWNLOAD_CHUNK_SIZE_PER_SECOND, totalContentLengthToDownload);
-            byte[] downloadedContent = defaultWebSystemCall.DownloadPartialContent(contentFileUrl, startDownloadingBytes, endDownloadingBytes).get().body();
-            Files.write(outputFilePath, downloadedContent, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            totalDownloadedBytes = endDownloadingBytes;
-        }
-        showDownloadProgress(onProgressChanged, totalContentLengthToDownload, totalDownloadedBytes);
-        return CompletableFuture.completedFuture(totalDownloadedBytes == totalContentLengthToDownload);
+        onProgressChanged.accept(getDownloadProgress(totalContentLengthToDownload, totalWrittenBytes));
+        return CompletableFuture.completedFuture(totalWrittenBytes == totalContentLengthToDownload);
     }
 
     public void CancelDownloads() {
         this.isDownloadActive = false;
     }
 
-    private void showDownloadProgress(final Consumer<FileProgress> onProgressChanged,
-                                      final long totalContentLengthToDownload,
-                                      final long totalDownloadedBytes) {
+    public void AllowResumeDownloads() {
+        this.isDownloadActive = true;
+    }
+
+    private FileProgress getDownloadProgress(final long totalContentLengthToDownload,
+                                             final long totalDownloadedBytes) {
         final double percentageDownloaded = 100.0 * totalDownloadedBytes / totalContentLengthToDownload;
         final long totalRemainingBytesToDownload = Math.max(0, totalContentLengthToDownload - totalDownloadedBytes);
         final Duration remainingTimeToDownloadInSeconds = Duration.ofSeconds(totalRemainingBytesToDownload / DOWNLOAD_CHUNK_SIZE_PER_SECOND);
-        onProgressChanged.accept(new FileProgress(totalContentLengthToDownload, totalDownloadedBytes, percentageDownloaded, remainingTimeToDownloadInSeconds));
+        return new FileProgress(totalContentLengthToDownload, totalDownloadedBytes, percentageDownloaded, remainingTimeToDownloadInSeconds);
     }
 }

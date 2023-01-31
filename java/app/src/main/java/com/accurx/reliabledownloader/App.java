@@ -12,9 +12,6 @@ public class App {
         var exampleUrl = "https://installer.demo.accurx.com/chain/3.182.57641.0/accuRx.Installer.Local.msi";
         var exampleFilePath = "downloadedContent/myfirstdownload.msi";
 
-        var testTextFile = "https://norvig.com/big.txt";
-        var testTextFilePath = "downloadedContent/textFile.txt";
-
         var fileDownloader = new MyFileDownloader();
         fileDownloader.DownloadFile(exampleUrl, exampleFilePath, (progress) -> System.out.println("Percent progress is " + progress));
     }
