@@ -2,34 +2,20 @@ package com.accurx.reliabledownloader;
 
 import java.time.Duration;
 
-public class FileProgress
-{
+public class FileProgress {
     private final long totalFileSize;
     private final long totalBytesDownloaded;
     private final double progressPercent;
-    private final Duration estimatedRemaining;
+    private final Duration estimatedRemainingInSeconds;
 
-    public FileProgress(long totalFileSize, long totalBytesDownloaded, double progressPercent, Duration estimatedRemaining) {
+    public FileProgress(final long totalFileSize,
+                        final long totalBytesDownloaded,
+                        final double progressPercent,
+                        final Duration estimatedRemainingInSeconds) {
         this.totalFileSize = totalFileSize;
         this.totalBytesDownloaded = totalBytesDownloaded;
         this.progressPercent = progressPercent;
-        this.estimatedRemaining = estimatedRemaining;
-    }
-
-    public long getTotalFileSize() {
-        return totalFileSize;
-    }
-
-    public long getTotalBytesDownloaded() {
-        return totalBytesDownloaded;
-    }
-
-    public double getProgressPercent() {
-        return progressPercent;
-    }
-
-    public Duration getEstimatedRemaining() {
-        return estimatedRemaining;
+        this.estimatedRemainingInSeconds = estimatedRemainingInSeconds;
     }
 
     @Override
@@ -38,7 +24,7 @@ public class FileProgress
                 "totalFileSize=" + totalFileSize +
                 ", totalBytesDownloaded=" + totalBytesDownloaded +
                 ", progressPercent=" + progressPercent +
-                ", estimatedRemaining=" + estimatedRemaining +
+                ", estimatedRemainingInSeconds=" + estimatedRemainingInSeconds.getSeconds() +
                 '}';
     }
 }
