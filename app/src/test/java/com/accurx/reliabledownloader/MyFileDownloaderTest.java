@@ -1,5 +1,6 @@
 package com.accurx.reliabledownloader;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,14 +17,19 @@ import static com.accurx.reliabledownloader.DownloadUtils.getTotalWrittenBytes;
 public class MyFileDownloaderTest {
     static final String CONTENT_FILE_URL_LARGE_FILE = "https://norvig.com/big.txt";
     static final String LOCAL_FILE_PATH = "src/test/downloadedTestContent/textFile.txt";
-    static final long TIME_OUT_IN_SECONDS = 20;
-    static final long SLEEP_TIME_IN_MILLISECONDS = 2_000;
+    static final long TIME_OUT_IN_SECONDS = 10;
+    static final long SLEEP_TIME_IN_MILLISECONDS = 1_000;
 
     MyFileDownloader fileDownloader = new MyFileDownloader();
 
     @BeforeEach
     public void setUp() throws IOException {
         fileDownloader.AllowResumeDownloads();
+        Files.deleteIfExists(Path.of(LOCAL_FILE_PATH));
+    }
+
+    @AfterEach
+    public void tearDown() throws IOException {
         Files.deleteIfExists(Path.of(LOCAL_FILE_PATH));
     }
 
